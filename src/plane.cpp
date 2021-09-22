@@ -1,6 +1,6 @@
 //  Class plane implementation for the plane flight simulator
 /*
- *  Plane - Free Software flight simulator
+ *  FSim - Free Software flight simulator
  *  Copyright (C) 2021 Andrei Rabusov
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -18,12 +18,8 @@
  */
 
 #include "plane.hpp"
-#include <filesystem>
+#include "gsl_if.hpp"
 #include <iostream>
-#include <numeric>
-#include <algorithm>
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_spline.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
@@ -176,66 +172,13 @@ void plane_t::solve_coord ()
     t += dt;
 }
 
-std::vector<std::size_t> sort_permutation(
-    const std::vector<double>& vec)
-{
-    std::vector<std::size_t> p(vec.size());
-    std::iota(p.begin(), p.end(), 0);
-    std::sort(p.begin(), p.end());
-    return p;
-}
-
-void apply_permutation(
-    std::vector<double>& vec,
-    const std::vector<std::size_t>& p)
-{
-    std::transform(p.begin(), p.end(), vec.begin(),
-        [&](std::size_t i){ return vec[i]; });
-}
-
-void sort_xx_yy (std::vector <double> &xs, std::vector<double> &ys)
-{
-    auto p = sort_permutation(xs);
-    apply_permutation(xs, p);
-    apply_permutation(ys, p);
-}
-
-
-void read_coeffs (const std::string &file, std::vector <double> &xx,
-        std::vector<double> &yy)
-{
-    xx.clear (); yy.clear ();
-    double x, y;
-    if (not std::filesystem::exists (std::filesystem::path (file))) {
-        std::cerr << "File " << file << " doesn't exist" << std::endl;
-        std::cerr.flush ();
-    }
-    std::ifstream coeffs_file (file);
-    while (coeffs_file >> x >> y) {
-        xx.push_back (x);
-        yy.push_back (y);
-    }
-    std::cout << "File " << file << " has " << xx.size () << " data points"
-        << std::endl;
-    coeffs_file.close ();
-}
-
-void init_gsl (gsl_interp_accel *&acc, gsl_spline *&spline,
-        std::vector <double> &xx, std::vector <double> &yy)
-{
-    sort_xx_yy (xx, yy);
-    acc = gsl_interp_accel_alloc ();
-    spline = gsl_spline_alloc (gsl_interp_cspline, xx.size());
-    gsl_spline_init (spline, &xx[0], &yy[0], xx.size ());
-
-}
-
 plane_t::plane_t (const std::string &plane_descr_file,
-        const std::string &envir, const std::string &c_lift_file)
+        const std::string &envir, const std::string &c_lift_file,
+        const std::string &c_drag_file)
 {
     init_plane_params (plane_descr_file);
     init_enviroment_params (envir);
-    init_lift_coeff_function (c_lift_file);
+    init_coeff_function (c_drag_file, c_lift_file);
     t = x = y = z = v_x = v_y = v_z = omega_x = omega_y = omega_z = 0.;
 }
 
@@ -270,39 +213,27 @@ void plane_t::init_plane_params (const std::string &plane_descr_file)
     sigma_flaps = pt.get<double> ("geometry.flaps_cross_section");
 }
 
-void plane_t::init_lift_coeff_function (const std::string &c_lift_file)
+void plane_t::init_coeff_function (const std::string &c_drag_file,
+        const std::string &c_lift_file)
 {
     read_coeffs (c_lift_file, c_lift_xx, c_lift_yy);
-    init_gsl (acc, spline, c_lift_xx, c_lift_yy);
-}
-
-void delete_gsl (gsl_interp_accel *acc, gsl_spline *spline)
-{
-    if (spline)
-        gsl_spline_free (spline);
-    if (acc)
-        gsl_interp_accel_free (acc);
+    init_gsl (lift_acc, lift_spline, c_lift_xx, c_lift_yy);
+    read_coeffs (c_drag_file, c_drag_xx, c_drag_yy);
+    init_gsl (drag_acc, drag_spline, c_drag_xx, c_drag_yy);
 }
 
 plane_t::~plane_t()
 {
-    delete_gsl (acc, spline);
+    delete_gsl (lift_acc, lift_spline);
+    delete_gsl (drag_acc, drag_spline);
 }
 
-double interpolate (std::vector <double> &xx, std::vector <double> &yy,
-        gsl_interp_accel *acc, gsl_spline *spline, double x)
+std::tuple<double, double> plane_t::c_xy_on_attack_angle (double att_angle)
 {
-    // Don't interpolate outside of [xmin, xmax]
-    if (x > xx.back())
-        return yy [xx.size () - 1];
-    if (x < xx[0])
-        return yy [0];
-    return gsl_spline_eval (spline, x, acc);
-}
-
-double plane_t::c_lift_on_attack_angle (double att_angle)
-{
-    return interpolate (c_lift_xx, c_lift_yy, acc, spline, att_angle);
+    return {
+        interpolate (c_drag_xx, c_drag_yy, drag_acc, drag_spline, att_angle),
+        interpolate (c_lift_xx, c_lift_yy, lift_acc, lift_spline, att_angle)
+    };
 }
 
 double plane_t::engine_force_on_throttle (double throttle)
@@ -323,24 +254,20 @@ void plane_t::time_step (double ailerons, double rudder, double elevator,
     rot_matrix ();
     calc_attack_angle ();
 
-    c_y = c_lift_on_attack_angle (attack_angle);
-    c_y_rudd = c_lift_on_attack_angle (rudder+attack_angle);
-    c_y_elev = c_lift_on_attack_angle (elevator+attack_angle);
-    c_y_right = c_lift_on_attack_angle (ailerons+attack_angle);
-    c_y_left = c_lift_on_attack_angle (-ailerons+attack_angle);
-    c_y_flaps = c_lift_on_attack_angle (flaps+attack_angle);
-
-    c_x = c_drag_on_c_lift (c_y);
-    c_x_left = c_drag_on_c_lift (c_y_left);
-    c_x_right = c_drag_on_c_lift (c_y_right);
-    c_x_rudd = c_drag_on_c_lift (c_y_rudd);
-    c_x_elev = c_drag_on_c_lift (c_y_elev);
-    c_x_flaps = c_drag_on_c_lift (c_y_flaps);
+    std::tie (c_x, c_y)            = c_xy_on_attack_angle (attack_angle);
+    std::tie (c_x_rudd, c_y_rudd)  = c_xy_on_attack_angle (rudder+attack_angle);
+    std::tie (c_x_elev, c_y_elev)  = c_xy_on_attack_angle (
+            elevator+attack_angle);
+    std::tie (c_x_elev, c_y_right) = c_xy_on_attack_angle (
+            ailerons+attack_angle);
+    std::tie (c_x_left, c_y_left)  = c_xy_on_attack_angle (
+            -ailerons+attack_angle);
+    std::tie (c_x_flaps, c_y_flaps)= c_xy_on_attack_angle (flaps+attack_angle);
 
     F_engine = engine_force_on_throttle (throttle);
 
     forces ();
-    tourque ();
+    torque ();
 
     newton_EOM ();
     euler_EOM ();

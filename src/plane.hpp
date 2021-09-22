@@ -51,15 +51,17 @@ class plane_t {
         double F_lift_wings, F_l_left_ail, F_l_right_ail, F_l_elev, F_rudder,
                F_drag_plane, F_drag_left_ail, F_drag_right_ail;
 
-        gsl_interp_accel *acc;
-        gsl_spline *spline; // "Stall" curve
+        gsl_interp_accel *lift_acc, *drag_acc;
+        gsl_spline *lift_spline, *drag_spline;
         std::vector <double> c_lift_xx, c_lift_yy;
-        void init_lift_coeff_function (const std::string &c_lift_file);
+        std::vector <double> c_drag_xx, c_drag_yy;
+        void init_coeff_function (const std::string &c_drag_file,
+                const std::string &c_lift_file);
         void init_plane_params (const std::string &);
         void init_enviroment_params (const std::string &);
 
         double engine_force_on_throttle (double throttle);
-        double c_lift_on_attack_angle (double attack_angle);
+        std::tuple<double, double> c_xy_on_attack_angle (double att_angle);
 
         void zero_rot_matrix ();
         void rot_matrix ();
@@ -80,7 +82,8 @@ class plane_t {
         plane_t () = delete;
         ~plane_t ();
         plane_t (const std::string &plane_descr_file,
-                const std::string &enviroment, const std::string &c_lift);
+                const std::string &enviroment, const std::string &c_drag,
+                const std::string &c_lift);
         void time_step (double ailerons, double rudder, double elevator,
                 double throttle, double flaps);
 };
