@@ -1,0 +1,18 @@
+2021-09-21  Andrei Rabusov  <arabusov@gmail.com>
+
+	* configure: Create configure.ac, Makefile.am's, common.mk, and all of the
+	COPYING, AUTHORS, README, ChangeLog, NEWS files.
+	* plane.cpp: Extend flight model with the attack angle, lifting/drag
+	forces for wings, its flaps, its ailerons, elevators, and rudder are
+	separated in order to calculate the torque properly. Lifting coefficients
+	are calculated using LUT from Wikipedia + cubic splines, thanks GSL. Engine
+	force is simply throttle times max power force.
+	* plane.hpp: Update.
+
+2021-09-19  Andrei Rabusov  <arabusov@gmail.com>
+
+	* plane.cpp: Begin to write my new flight simulator based on my old code
+	from 2008, written in Pascal (that PLANE.PAS file from my mum's aunt PC from
+	her cellar).
+	* plane.hpp: Create header with the plane_t class description.
+

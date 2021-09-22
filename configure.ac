@@ -1,0 +1,27 @@
+AC_INIT([plane], [0.1], [arabusov@gmail.com])
+: ${CXXFLAGS=""}
+AC_CONFIG_MACRO_DIRS([m4])
+AC_CONFIG_AUX_DIR([build-aux])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
+
+LT_INIT
+AC_ENABLE_SHARED
+AC_PROG_LIBTOOL
+AC_LANG([C])
+AC_PROG_CC
+AC_PROG_CPP
+AC_LANG([C++])
+AC_PROG_CXX
+AC_PROG_CXXCPP
+AX_CXX_COMPILE_STDCXX_17([noext], [mandatory])
+AX_BOOST_BASE([1.67])
+AX_BOOST_PROGRAM_OPTIONS
+
+PKG_CHECK_MODULES([gsl], [gsl >= 1.15])
+
+AC_C_INLINE
+AX_CHECK_X86_FEATURES
+AC_CONFIG_FILES([Makefile
+src/Makefile
+])
+AC_OUTPUT
