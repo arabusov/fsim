@@ -1,3 +1,12 @@
+2021-09-22  Andrei Rabusov  <arabusov@gmail.com>
+
+	* Now plane.cpp and gsl_if.cpp can be compiled and buildt into a library
+	* plane.cpp: Separate GSL interface from plane.cpp into gsl_if.cpp,
+	interpolate the drag coefficient as well as the lift coefficient
+	* plane.hpp: Update
+	* gsl_if.cpp: C&P from plane.cpp
+	* gsl_if.hpp: Create header
+
 2021-09-21  Andrei Rabusov  <arabusov@gmail.com>
 
 	* configure: Create configure.ac, Makefile.am's, common.mk, and all of the
