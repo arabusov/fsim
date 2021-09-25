@@ -1,10 +1,15 @@
 include $(top_srcdir)/common.mk
 
-lib_LTLIBRARIES = plane.la
-plane_la_SOURCES = gsl_if.hpp gsl_if.cpp plane.cpp plane.hpp
-plane_la_CPPFLAGS=-fPIC
-plane_la_CPPFLAGS+=${AM_CPPFLAGS}
-plane_la_CXXFLAGS=-fPIC -I. -I${top_srcdir}
-plane_la_CXXFLAGS+=${AM_CXXFLAGS}
-plane_la_CXXFLAGS+=${AM_CRAZY_MATH}
-plane_la_LDFLAGS= -shared -module -avoid-version
+noinst_LTLIBRARIES = libplane.la
+libplane_la_SOURCES = gsl_if.hpp gsl_if.cpp plane.cpp plane.hpp
+libplane_la_CPPFLAGS = ${AM_CPPFLAGS}
+libplane_la_CXXFLAGS = -I. -I${top_srcdir}
+libplane_la_CXXFLAGS += ${AM_CXXFLAGS}
+libplane_la_CXXFLAGS += ${AM_CRAZY_MATH}
+
+bin_PROGRAMS = fsim
+fsim_SOURCES = fsim.cpp
+fsim_CXXFLAGS = -I. -I${top_srcdir}
+fsim_CXXFLAGS += ${AM_CXXFLAGS} ${AM_CRAZY_MATH}
+fsim_LDADD = libplane.la
+fsim_LDFLAGS = $(gsl_LIBS) -lboost_program_options -lboost_system

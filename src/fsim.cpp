@@ -1,6 +1,6 @@
-//  GSL interface header (C-like module)
+//  Main source file fo the plane flight simulator (fsim)
 /*
- *  FSim - Free Software flight simulator
+ *  Fsim - Free Software flight simulator
  *  Copyright (C) 2021 Andrei Rabusov
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,16 +16,9 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#pragma once
-#include <string>
-#include <vector>
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_spline.h>
+#include "plane.hpp"
 
-extern void read_coeffs (const std::string &file, std::vector <double> &xx,
-        std::vector<double> &yy);
-extern void init_gsl (gsl_interp_accel *&acc, gsl_spline *&spline,
-        std::vector <double> &xx, std::vector <double> &yy);
-extern void delete_gsl (gsl_interp_accel *acc, gsl_spline *spline);
-extern double interpolate (std::vector <double> &xx, std::vector <double> &yy,
-        gsl_interp_accel *acc, gsl_spline *spline, double x);
+int main ()
+{
+    return 0;
+}

@@ -1,3 +1,7 @@
+2021-09-25  Andrei Rabusov  <arabusov@gmail.com>
+
+	* fsim.cpp: Create fish
+
 2021-09-22  Andrei Rabusov  <arabusov@gmail.com>
 
 	* Now plane.cpp and gsl_if.cpp can be compiled and buildt into a library

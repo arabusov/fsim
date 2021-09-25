@@ -1,4 +1,4 @@
-AC_INIT([plane], [0.1], [arabusov@gmail.com])
+AC_INIT([fsim], [0.1], [arabusov@gmail.com])
 : ${CXXFLAGS=""}
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_AUX_DIR([build-aux])
