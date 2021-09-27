@@ -23,10 +23,13 @@
 #include <vector>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_spline.h>
-
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#define __DEBUG__
+using namespace Eigen;
 class plane_t {
     private:
-        double R [3][3];
+        Matrix3f R;
         double omega_x, omega_y, omega_z;
         double eps_x, eps_y, eps_z;
         double tau_x, tau_y, tau_z;
@@ -63,7 +66,6 @@ class plane_t {
         double engine_force_on_throttle (double throttle);
         std::tuple<double, double> c_xy_on_attack_angle (double att_angle);
 
-        void zero_rot_matrix ();
         void rot_matrix ();
         std::tuple <double, double, double> proj (double, double, double);
         void forces ();
@@ -78,6 +80,10 @@ class plane_t {
         void solve_velocity ();
         void solve_coord ();
         void calc_attack_angle ();
+
+        // Debugging private members:
+        void debug_forces ();
+        void debug_torques ();
     public:
         plane_t () = delete;
         ~plane_t ();

@@ -20,59 +20,28 @@
 #include "plane.hpp"
 #include "gsl_if.hpp"
 #include <iostream>
+#include <iomanip>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 using namespace std;
-
-void plane_t::zero_rot_matrix ()
-{
-    for (auto i = 0; i < 3; i++) {
-        for (auto j = 0; j < 3; j++) {
-            R [i][j] = 0.;
-        }
-    }
-}
+using namespace Eigen;
 
 void plane_t::rot_matrix ()
 {
-    double R_x [3][3] = {
-        {1., 0., 0.},
-        {0., cos (alpha_x), sin (alpha_x)},
-        {0., -sin (alpha_x), cos (alpha_x)}
-    };
-    double R_y [3][3] = {
-        {cos (alpha_y), 0., -sin (alpha_y)},
-        {0., 1., 0.},
-        {sin (alpha_y), 0., cos (alpha_y)}
-    };
-    double R_z [3][3] = {
-        {cos (alpha_z), sin (alpha_z), 0.},
-        {-sin (alpha_z), cos (alpha_z), 0.},
-        {0., 0., 1.}
-    };
-    // R_il = Rx_ij Ry_jk Rz_kl
-    zero_rot_matrix ();
-    for (auto i = 0; i < 3; i ++) {
-        for (auto j = 0; j < 3; j ++) {
-            for (auto k = 0; k < 3; k ++) {
-                for (auto l = 0; l < 3; l ++) {
-                    R [i][l] += R_x[i][j]*R_y[j][k]*R_z[k][l];
-                }
-            }
-        }
-    }
+	// Tait–Bryan angles
+	R = AngleAxisf(alpha_x, Vector3f::UnitX())
+		* AngleAxisf(alpha_y, Vector3f::UnitY())
+		* AngleAxisf(alpha_z, Vector3f::UnitZ());
 }
 
 std::tuple <double, double, double> plane_t::proj (double _x, double _y, double _z)
 {
-    double vec [3] = {0., 0., 0.}, vecp[3] = {_x, _y, _z};
-    for (auto i = 0; i < 3; i++) {
-        for (auto j = 0; j < 3; j++) {
-            vec [i] += R [i][j] * vecp [j];
-        }
-    }
-    return {vec[0], vec[1], vec[2]};
+	Vector3f vec_or; vec_or << _x, _y, _z;
+	Vector3f vec = R*vec_or;
+    return {vec(0), vec(1), vec(2)};
 }
 
 void plane_t::forces ()
@@ -219,8 +188,12 @@ void plane_t::init_coeff_function (const std::string &c_drag_file,
         const std::string &c_lift_file)
 {
     read_coeffs (c_lift_file, c_lift_xx, c_lift_yy);
+    // Convert degrees to radians:
+    for (auto &el: c_lift_xx) el *= M_PI/180.;
     init_gsl (lift_acc, lift_spline, c_lift_xx, c_lift_yy);
     read_coeffs (c_drag_file, c_drag_xx, c_drag_yy);
+    // Convert degrees to radians:
+    for (auto &el: c_drag_xx) el *= M_PI/180.;
     init_gsl (drag_acc, drag_spline, c_drag_xx, c_drag_yy);
 }
 
@@ -269,7 +242,13 @@ void plane_t::time_step (double ailerons, double rudder, double elevator,
     F_engine = engine_force_on_throttle (throttle);
 
     forces ();
+#ifdef __DEBUG__
+    debug_forces ();
+#endif
     torque ();
+#ifdef __DEBUG__
+    debug_torques ();
+#endif
 
     newton_EOM ();
     euler_EOM ();
@@ -277,4 +256,22 @@ void plane_t::time_step (double ailerons, double rudder, double elevator,
     solve_angles ();
     solve_velocity ();
     solve_coord ();
+}
+
+void plane_t::debug_forces ()
+{
+    std::cout << "F = ("
+        << std::setw (8) << F_x
+        << std::setw (8) << F_y
+        << std::setw (8) << F_z
+        << ")" << std::endl;
+}
+
+void plane_t::debug_torques ()
+{
+    std::cout << "M = ("
+        << std::setw (8) << tau_x
+        << std::setw (8) << tau_y
+        << std::setw (8) << tau_z
+        << ")" << std::endl;
 }
