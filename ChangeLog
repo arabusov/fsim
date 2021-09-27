@@ -1,6 +1,7 @@
 2021-09-25  Andrei Rabusov  <arabusov@gmail.com>
 
-	* fsim.cpp: Create fish
+	* fsim.cpp: Create, add program options, hardcode path to .dat files
+	* share/*.dat: Create drag/lift .dat files, fill with junky numbers
 
 2021-09-22  Andrei Rabusov  <arabusov@gmail.com>
 
