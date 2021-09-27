@@ -19,6 +19,7 @@
 #include "plane.hpp"
 #include <boost/program_options.hpp>
 #include <iostream>
+#include <iomanip>
 
 namespace po = boost::program_options;
 
@@ -35,11 +36,21 @@ std::string distr_data_file (const std::string &file)
  * Tests: single-thread program which runs plane_t with an arbitrary time step
  * and stores result into a file (up to now only stdout)
  */
-void run_tests (const std::string &plane, const std::string &envir)
+void run_tests (const std::string &plane_cfg, const std::string &envir)
 {
     const auto c_drag = distr_data_file ("drag.dat");
     const auto c_lift = distr_data_file ("lift.dat");
-    plane_t (plane, envir, c_drag, c_lift);
+    plane_t plane (plane_cfg, envir, c_drag, c_lift);
+    plane.set_coord (0., 0., 1000.); // Height: 1km
+    plane.set_velocity (200., 0., 0.); // speed about 600--700 kph
+    plane.time_step (0., 0., 0., 1., 0.);
+    std::cout
+        << std::setw (8) << plane.x
+        << std::setw (8) << plane.y
+        << std::setw (8) << plane.z
+        << std::setw (8) << plane.v_x
+        << std::setw (8) << plane.v_y
+        << std::setw (8) << plane.v_z << std::endl;
 }
 
 /*

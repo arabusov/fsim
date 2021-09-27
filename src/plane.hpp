@@ -86,5 +86,7 @@ class plane_t {
                 const std::string &c_lift);
         void time_step (double ailerons, double rudder, double elevator,
                 double throttle, double flaps);
+        void set_coord (double x_, double y_, double z_) {x=x_;y=y_;z=z_;}
+        void set_velocity (double x_, double y_, double z_) {v_x=x_;v_y=y_;v_z=z_;}
 };
 inline double sqr (double x) { return x*x; }

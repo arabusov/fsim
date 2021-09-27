@@ -123,6 +123,7 @@ void plane_t::euler_EOM ()
 
 double strip_angle (double angle)
 {
+    return angle;
     if ((angle < 2*M_PI) and (angle >= 0.)) {
         return angle;
     } else if (angle > 0.) {
@@ -180,6 +181,7 @@ plane_t::plane_t (const std::string &plane_descr_file,
     init_environment_params (envir);
     init_coeff_function (c_drag_file, c_lift_file);
     t = x = y = z = v_x = v_y = v_z = omega_x = omega_y = omega_z = 0.;
+    dt = 0.01;
 }
 
 void plane_t::init_environment_params (const std::string &envir_file)
