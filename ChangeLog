@@ -1,3 +1,10 @@
+2021-09-27  Andrei Rabusov  <arabusov@gmail.com>
+
+	* share/*.ini: Create MiG-17 and environment config files
+	* fsim.cpp: add a single step
+	* plane.cpp: some tiny fixes
+	* autotools: add Eigen dependency
+
 2021-09-25  Andrei Rabusov  <arabusov@gmail.com>
 
 	* fsim.cpp: Create, add program options, hardcode path to .dat files
