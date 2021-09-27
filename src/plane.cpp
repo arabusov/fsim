@@ -177,12 +177,12 @@ plane_t::plane_t (const std::string &plane_descr_file,
         const std::string &c_drag_file)
 {
     init_plane_params (plane_descr_file);
-    init_enviroment_params (envir);
+    init_environment_params (envir);
     init_coeff_function (c_drag_file, c_lift_file);
     t = x = y = z = v_x = v_y = v_z = omega_x = omega_y = omega_z = 0.;
 }
 
-void plane_t::init_enviroment_params (const std::string &envir_file)
+void plane_t::init_environment_params (const std::string &envir_file)
 {
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini (envir_file, pt);

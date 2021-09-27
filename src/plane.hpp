@@ -58,7 +58,7 @@ class plane_t {
         void init_coeff_function (const std::string &c_drag_file,
                 const std::string &c_lift_file);
         void init_plane_params (const std::string &);
-        void init_enviroment_params (const std::string &);
+        void init_environment_params (const std::string &);
 
         double engine_force_on_throttle (double throttle);
         std::tuple<double, double> c_xy_on_attack_angle (double att_angle);
@@ -82,7 +82,7 @@ class plane_t {
         plane_t () = delete;
         ~plane_t ();
         plane_t (const std::string &plane_descr_file,
-                const std::string &enviroment, const std::string &c_drag,
+                const std::string &environment, const std::string &c_drag,
                 const std::string &c_lift);
         void time_step (double ailerons, double rudder, double elevator,
                 double throttle, double flaps);

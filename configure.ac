@@ -23,5 +23,6 @@ AC_C_INLINE
 AX_CHECK_X86_FEATURES
 AC_CONFIG_FILES([Makefile
 src/Makefile
+share/Makefile
 ])
 AC_OUTPUT

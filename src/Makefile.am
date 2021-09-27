@@ -1,3 +1,5 @@
+# src/Makefile.am for fsim
+
 include $(top_srcdir)/common.mk
 
 noinst_LTLIBRARIES = libplane.la
@@ -9,6 +11,7 @@ libplane_la_CXXFLAGS += ${AM_CRAZY_MATH}
 
 bin_PROGRAMS = fsim
 fsim_SOURCES = fsim.cpp
+fsim_CPPFLAGS = ${AM_CPPFLAGS}
 fsim_CXXFLAGS = -I. -I${top_srcdir}
 fsim_CXXFLAGS += ${AM_CXXFLAGS} ${AM_CRAZY_MATH}
 fsim_LDADD = libplane.la

@@ -17,8 +17,70 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "plane.hpp"
+#include <boost/program_options.hpp>
+#include <iostream>
 
-int main ()
+namespace po = boost::program_options;
+
+/*
+ * return path to data files
+ */
+std::string distr_data_file (const std::string &file)
 {
+    std::string data_dir = DATADIR;
+    return data_dir + "/" + file;
+}
+
+/*
+ * Tests: single-thread program which runs plane_t with an arbitrary time step
+ * and stores result into a file (up to now only stdout)
+ */
+void run_tests (const std::string &plane, const std::string &envir)
+{
+    const auto c_drag = distr_data_file ("drag.dat");
+    const auto c_lift = distr_data_file ("lift.dat");
+    plane_t (plane, envir, c_drag, c_lift);
+}
+
+/*
+ * main (): wrap argc, argv into boost PO
+ */
+int main (int argc, char **argv)
+{
+    po::options_description desc ("Fsim options");
+    desc.add_options ()
+        ("help", "Print help")
+        ("plane,p", po::value<std::string>(),
+        "Mandatory: Config file with the plane description")
+        ("environment,e", po::value<std::string>(),
+        "Mandatory: Config with environment description")
+    ;
+    po::positional_options_description p;
+    p.add ("plane", 1);
+    p.add ("environment", 1);
+    po::variables_map vm;
+    po::store (po::command_line_parser (argc, argv)
+        .options(desc).positional(p).run(),
+        vm);
+    po::notify (vm);
+    if (vm.count ("help")) {
+        std::cout << desc << std::endl;
+        return 1;
+    }
+    if (vm.count ("plane") == 0) {
+        std::cout << "Plane config file is not provided." << std::endl;
+        std::cout << desc << std::endl;
+        return 2;
+    }
+    if (vm.count ("environment") == 0) {
+        std::cout << "Environment config file is not provided." << std::endl;
+        std::cout << desc << std::endl;
+        return 2;
+    }
+    const std::string &plane_config =
+        vm["plane"].as<std::string> ();
+    const std::string &envir_config=
+        vm["environment"].as<std::string> ();
+    run_tests (plane_config, envir_config);
     return 0;
 }
