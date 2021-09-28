@@ -57,18 +57,18 @@ void plane_t::forces ()
     F_drag_left_ail = c_x_left*sigma_ail*rho*sqr(u)/2.;
     F_drag_right_ail = c_x_right*sigma_ail*rho*sqr(u)/2.;
 
-    F_rudder = 0.; // c_y_rudd*S_rudd*rho*sqr(u)/2.;
+    F_rudder = c_y_rudd*S_rudd*rho*sqr(u)/2.;
 
     auto F_grav = m * g;
 
     auto F_air_lifting = F_lift_wings+F_l_left_ail+F_l_right_ail+F_l_elev;
     auto F_air_drag = F_drag_plane+F_drag_left_ail+F_drag_right_ail;
 
-    auto F_N = F_air_lifting < F_grav ? F_grav - F_air_lifting : 0.;
+    auto F_N = y < 0. ? F_grav - F_air_lifting : 0.;
     const auto [Li_x, Li_y, Li_z] = proj (0., 0., F_air_lifting);
     std::cout << "Air drag: " << F_air_drag << " [N]" << std::endl;
     const auto [Fr_x, Fr_y, Fr_z] = proj (-F_air_drag, 0., 0.);
-    const auto [Rd_x, Rd_y, Rd_z] = proj (0., F_rudder, 0.);
+    const auto [Rd_x, Rd_y, Rd_z] = proj (0., -F_rudder, 0.);
     const auto [En_x, En_y, En_z] = proj (F_engine, 0., 0.);
 
     F_x = En_x + Fr_x + Li_x + Rd_x;
@@ -153,7 +153,7 @@ plane_t::plane_t (const std::string &plane_descr_file,
     init_environment_params (envir);
     init_coeff_function (c_drag_file, c_lift_file);
     t = x = y = z = v_x = v_y = v_z = omega_x = omega_y = omega_z = 0.;
-    dt = 0.01;
+    dt = 0.0001;
 }
 
 void plane_t::init_environment_params (const std::string &envir_file)
@@ -177,6 +177,7 @@ void plane_t::init_plane_params (const std::string &plane_descr_file)
     tail_to_cm = pt.get<double> ("geometry.tail_to_cm");
     wings_to_cm = pt.get<double> ("geometry.wings_to_cm");
     S = pt.get<double> ("geometry.wings_area");
+    wings_attack_angle = pt.get<double> ("geometry.wings_attack_angle");
     S_ail = pt.get<double> ("geometry.aileron_area");
     S_tail = pt.get<double> ("geometry.tail_area");
     S_elev = pt.get<double> ("geometry.elev_area");
@@ -229,7 +230,8 @@ void plane_t::calc_attack_angle ()
     const auto v = v_plane.norm ();
     double cdot = v_plane (0);
     if (u != 0.) {
-        attack_angle = std::acos (cdot / v) * sgn (v_plane (1));
+        attack_angle = std::acos (cdot / v) * sgn (v_plane (2));
+        rudd_attack_angle = std::acos (v_plane (1) / v) * sgn (v_plane (2));
     } else {
         attack_angle = 0.;
     }
@@ -245,8 +247,10 @@ void plane_t::time_step (double ailerons, double rudder, double elevator,
     std::cout << "Psi: " << attack_angle *180./M_PI << " [deg.]" << std::endl;
 #endif
 
-    std::tie (c_x, c_y)            = c_xy_on_attack_angle (attack_angle);
-    std::tie (c_x_rudd, c_y_rudd)  = c_xy_on_attack_angle (rudder+attack_angle);
+    std::tie (c_x, c_y)            = c_xy_on_attack_angle (
+            attack_angle+M_PI/180.*wings_attack_angle);
+    std::tie (c_x_rudd, c_y_rudd)  = c_xy_on_attack_angle (
+            rudder+rudd_attack_angle);
     std::tie (c_x_elev, c_y_elev)  = c_xy_on_attack_angle (
             elevator+attack_angle);
     std::tie (c_x_elev, c_y_right) = c_xy_on_attack_angle (

@@ -38,7 +38,7 @@ class plane_t {
         double x, y, z;
         double v_x, v_y, v_z, u;
     private:
-        double attack_angle;
+        double attack_angle, rudd_attack_angle, wings_attack_angle;
         double a_x, a_y, a_z;
         double F_x, F_y, F_z;
         double c_y, c_y_left, c_y_right, c_y_rudd, c_y_elev, c_y_flaps;
