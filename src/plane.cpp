@@ -28,6 +28,7 @@
 
 using namespace std;
 using namespace Eigen;
+constexpr auto dec_prec = 14;
 
 void plane_t::rot_matrix ()
 {
@@ -35,6 +36,11 @@ void plane_t::rot_matrix ()
 	R = AngleAxisf(alpha_x, Vector3f::UnitX())
 		* AngleAxisf(alpha_y, Vector3f::UnitY())
 		* AngleAxisf(alpha_z, Vector3f::UnitZ());
+	R_rev = R.transpose ();
+#ifdef __DEBUG__
+    std::cout << "R: " << R << std::endl;
+    std::cout << "R*R^T: " << R*R_rev << std::endl;
+#endif
 }
 
 std::tuple <double, double, double> plane_t::proj (double _x, double _y, double _z)
@@ -216,11 +222,25 @@ double plane_t::engine_force_on_throttle (double throttle)
     return throttle * max_throttle;
 }
 
+inline double sgn (double x) { return x > 0. ? 1. : -1.; }
+
 void plane_t::calc_attack_angle ()
 {
-    auto [ux, uy, uz] = proj (1., 0., 0.); // plane direction
-    double cdot = ux*v_x+uy*v_y+uz*v_z;
-    attack_angle = std::acos (cdot / u);
+    Vector3f v_glob; v_glob << v_x, v_y, v_z;
+    const auto v_plane = R_rev * v_glob; // rotate to the plane frame,
+    // where plane orientation is (1, 0, 0)
+    const auto v = v_plane.norm ();
+    double cdot = v_plane (0);
+#ifdef __DEBUG__
+    std::cout << "Plane direction: "
+        << v_plane << std::endl;
+    std::cout << "cdot: "  << cdot << std::endl;
+#endif
+    if (u != 0.) {
+        attack_angle = std::acos (cdot / v) * sgn (v_plane (1));
+    } else {
+        attack_angle = 0.;
+    }
 }
 
 void plane_t::time_step (double ailerons, double rudder, double elevator,
@@ -228,6 +248,10 @@ void plane_t::time_step (double ailerons, double rudder, double elevator,
 {
     rot_matrix ();
     calc_attack_angle ();
+
+#ifdef __DEBUG__
+    std::cout << "Psi: " << attack_angle << std::endl;
+#endif
 
     std::tie (c_x, c_y)            = c_xy_on_attack_angle (attack_angle);
     std::tie (c_x_rudd, c_y_rudd)  = c_xy_on_attack_angle (rudder+attack_angle);
@@ -238,6 +262,16 @@ void plane_t::time_step (double ailerons, double rudder, double elevator,
     std::tie (c_x_left, c_y_left)  = c_xy_on_attack_angle (
             -ailerons+attack_angle);
     std::tie (c_x_flaps, c_y_flaps)= c_xy_on_attack_angle (flaps+attack_angle);
+#ifdef __DEBUG__
+    std::cout << "C_y: "
+        << std::setw (dec_prec) << c_y
+        << std::setw (dec_prec) << c_y_rudd
+        << std::setw (dec_prec) << c_y_elev
+        << std::setw (dec_prec) << c_y_left
+        << std::setw (dec_prec) << c_y_right
+        << std::setw (dec_prec) << c_y_flaps
+        << std::endl;
+#endif
 
     F_engine = engine_force_on_throttle (throttle);
 
@@ -261,17 +295,17 @@ void plane_t::time_step (double ailerons, double rudder, double elevator,
 void plane_t::debug_forces ()
 {
     std::cout << "F = ("
-        << std::setw (8) << F_x
-        << std::setw (8) << F_y
-        << std::setw (8) << F_z
+        << std::setw (dec_prec) << F_x
+        << std::setw (dec_prec) << F_y
+        << std::setw (dec_prec) << F_z
         << ")" << std::endl;
 }
 
 void plane_t::debug_torques ()
 {
     std::cout << "M = ("
-        << std::setw (8) << tau_x
-        << std::setw (8) << tau_y
-        << std::setw (8) << tau_z
+        << std::setw (dec_prec) << tau_x
+        << std::setw (dec_prec) << tau_y
+        << std::setw (dec_prec) << tau_z
         << ")" << std::endl;
 }

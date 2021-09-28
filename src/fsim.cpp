@@ -22,6 +22,7 @@
 #include <iomanip>
 
 namespace po = boost::program_options;
+constexpr auto dec_prec = 14;
 
 /*
  * return path to data files
@@ -43,14 +44,17 @@ void run_tests (const std::string &plane_cfg, const std::string &envir)
     plane_t plane (plane_cfg, envir, c_drag, c_lift);
     plane.set_coord (0., 0., 1000.); // Height: 1km
     plane.set_velocity (200., 0., 0.); // speed about 600--700 kph
-    plane.time_step (0., 0., 0., 1., 0.);
-    std::cout
-        << std::setw (8) << plane.x
-        << std::setw (8) << plane.y
-        << std::setw (8) << plane.z
-        << std::setw (8) << plane.v_x
-        << std::setw (8) << plane.v_y
-        << std::setw (8) << plane.v_z << std::endl;
+    for (auto i=0U; i < 200; i ++) {
+        plane.time_step (0., 0., 0., 1., 0.);
+        std::cout << "Coordinate and velocity:" << std::endl;
+        std::cout
+            << std::setw (dec_prec) << plane.x
+            << std::setw (dec_prec) << plane.y
+            << std::setw (dec_prec) << plane.z
+            << std::setw (dec_prec) << plane.v_x
+            << std::setw (dec_prec) << plane.v_y
+            << std::setw (dec_prec) << plane.v_z << std::endl;
+    }
 }
 
 /*

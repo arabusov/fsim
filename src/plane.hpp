@@ -29,7 +29,7 @@
 using namespace Eigen;
 class plane_t {
     private:
-        Matrix3f R;
+        Matrix3f R, R_rev;
         double omega_x, omega_y, omega_z;
         double eps_x, eps_y, eps_z;
         double tau_x, tau_y, tau_z;
@@ -93,6 +93,10 @@ class plane_t {
         void time_step (double ailerons, double rudder, double elevator,
                 double throttle, double flaps);
         void set_coord (double x_, double y_, double z_) {x=x_;y=y_;z=z_;}
-        void set_velocity (double x_, double y_, double z_) {v_x=x_;v_y=y_;v_z=z_;}
+        void set_velocity (double x_, double y_, double z_)
+        {
+            v_x=x_;v_y=y_;v_z=z_;
+            u = std::sqrt (v_x*v_x + v_y*v_y + v_z*v_z);
+        }
 };
 inline double sqr (double x) { return x*x; }
