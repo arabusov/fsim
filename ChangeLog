@@ -1,9 +1,15 @@
+2021-09-28  Andrei Rabusov  <arabusov@gmail.com>
+
+	* plane.cpp: Switch to Eigen, add negative angle of attack, fix NaNs, add
+	debug output
+	* fsim.cpp: Print first 200 time steps
+
 2021-09-27  Andrei Rabusov  <arabusov@gmail.com>
 
 	* share/*.ini: Create MiG-17 and environment config files
-	* fsim.cpp: add a single step
-	* plane.cpp: some tiny fixes
-	* autotools: add Eigen dependency
+	* fsim.cpp: Add a single step
+	* plane.cpp: Tiny fixes
+	* autotools: Add Eigen dependency
 
 2021-09-25  Andrei Rabusov  <arabusov@gmail.com>
 
@@ -12,7 +18,7 @@
 
 2021-09-22  Andrei Rabusov  <arabusov@gmail.com>
 
-	* Now plane.cpp and gsl_if.cpp can be compiled and buildt into a library
+	* Now plane.cpp and gsl_if.cpp can be compiled and built into a library
 	* plane.cpp: Separate GSL interface from plane.cpp into gsl_if.cpp,
 	interpolate the drag coefficient as well as the lift coefficient
 	* plane.hpp: Update
