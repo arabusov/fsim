@@ -32,11 +32,11 @@ constexpr auto dec_prec = 14;
 
 void plane_t::rot_matrix ()
 {
-	// Tait–Bryan angles
-	R = AngleAxisf(alpha_x, Vector3f::UnitX())
-		* AngleAxisf(alpha_y, Vector3f::UnitY())
-		* AngleAxisf(alpha_z, Vector3f::UnitZ());
-	R_rev = R.transpose ();
+    // Tait–Bryan angles
+    R = AngleAxisf(alpha_x, Vector3f::UnitX())
+        * AngleAxisf(alpha_y, Vector3f::UnitY())
+        * AngleAxisf(alpha_z, Vector3f::UnitZ());
+    R_rev = R.transpose ();
 #ifdef __DEBUG__
     std::cout << "R: " << R << std::endl;
     std::cout << "R*R^T: " << R*R_rev << std::endl;
@@ -45,8 +45,8 @@ void plane_t::rot_matrix ()
 
 std::tuple <double, double, double> plane_t::proj (double _x, double _y, double _z)
 {
-	Vector3f vec_or; vec_or << _x, _y, _z;
-	Vector3f vec = R*vec_or;
+    Vector3f vec_or; vec_or << _x, _y, _z;
+    Vector3f vec = R*vec_or;
     return {vec(0), vec(1), vec(2)};
 }
 
