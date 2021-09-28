@@ -44,8 +44,8 @@ void run_tests (const std::string &plane_cfg, const std::string &envir)
     plane_t plane (plane_cfg, envir, c_drag, c_lift);
     plane.set_coord (0., 0., 1000.); // Height: 1km
     plane.set_velocity (200., 0., 0.); // speed about 600--700 kph
-    for (auto i=0U; i < 200; i ++) {
-        plane.time_step (0., 0., 0., 1., 0.);
+    for (auto i=0U; i < 20; i ++) {
+        plane.time_step (0., 0., 0., 0.8, 0.);
         std::cout << "Coordinate and velocity:" << std::endl;
         std::cout
             << std::setw (dec_prec) << plane.x

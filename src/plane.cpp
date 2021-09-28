@@ -37,10 +37,6 @@ void plane_t::rot_matrix ()
         * AngleAxisf(alpha_y, Vector3f::UnitY())
         * AngleAxisf(alpha_z, Vector3f::UnitZ());
     R_rev = R.transpose ();
-#ifdef __DEBUG__
-    std::cout << "R: " << R << std::endl;
-    std::cout << "R*R^T: " << R*R_rev << std::endl;
-#endif
 }
 
 std::tuple <double, double, double> plane_t::proj (double _x, double _y, double _z)
@@ -61,7 +57,7 @@ void plane_t::forces ()
     F_drag_left_ail = c_x_left*sigma_ail*rho*sqr(u)/2.;
     F_drag_right_ail = c_x_right*sigma_ail*rho*sqr(u)/2.;
 
-    F_rudder = c_y_rudd*S_rudd*rho*sqr(u)/2.;
+    F_rudder = 0.; // c_y_rudd*S_rudd*rho*sqr(u)/2.;
 
     auto F_grav = m * g;
 
@@ -70,6 +66,7 @@ void plane_t::forces ()
 
     auto F_N = F_air_lifting < F_grav ? F_grav - F_air_lifting : 0.;
     const auto [Li_x, Li_y, Li_z] = proj (0., 0., F_air_lifting);
+    std::cout << "Air drag: " << F_air_drag << " [N]" << std::endl;
     const auto [Fr_x, Fr_y, Fr_z] = proj (-F_air_drag, 0., 0.);
     const auto [Rd_x, Rd_y, Rd_z] = proj (0., F_rudder, 0.);
     const auto [En_x, En_y, En_z] = proj (F_engine, 0., 0.);
@@ -83,7 +80,7 @@ void plane_t::torque ()
 {
     // In the plane frame:
     tau_x = (F_l_left_ail - F_l_right_ail) * eff_wing_length; 
-    tau_y = tail_to_cm*F_l_elev - wings_to_cm*(
+    tau_y = - tail_to_cm*F_l_elev + wings_to_cm*(
             F_lift_wings + F_l_left_ail + F_l_right_ail);
     tau_z = F_rudder*tail_to_cm;
 }
@@ -149,8 +146,8 @@ void plane_t::solve_coord ()
 }
 
 plane_t::plane_t (const std::string &plane_descr_file,
-        const std::string &envir, const std::string &c_lift_file,
-        const std::string &c_drag_file)
+        const std::string &envir, const std::string &c_drag_file,
+        const std::string &c_lift_file)
 {
     init_plane_params (plane_descr_file);
     init_environment_params (envir);
@@ -231,11 +228,6 @@ void plane_t::calc_attack_angle ()
     // where plane orientation is (1, 0, 0)
     const auto v = v_plane.norm ();
     double cdot = v_plane (0);
-#ifdef __DEBUG__
-    std::cout << "Plane direction: "
-        << v_plane << std::endl;
-    std::cout << "cdot: "  << cdot << std::endl;
-#endif
     if (u != 0.) {
         attack_angle = std::acos (cdot / v) * sgn (v_plane (1));
     } else {
@@ -250,7 +242,7 @@ void plane_t::time_step (double ailerons, double rudder, double elevator,
     calc_attack_angle ();
 
 #ifdef __DEBUG__
-    std::cout << "Psi: " << attack_angle << std::endl;
+    std::cout << "Psi: " << attack_angle *180./M_PI << " [deg.]" << std::endl;
 #endif
 
     std::tie (c_x, c_y)            = c_xy_on_attack_angle (attack_angle);
@@ -262,16 +254,6 @@ void plane_t::time_step (double ailerons, double rudder, double elevator,
     std::tie (c_x_left, c_y_left)  = c_xy_on_attack_angle (
             -ailerons+attack_angle);
     std::tie (c_x_flaps, c_y_flaps)= c_xy_on_attack_angle (flaps+attack_angle);
-#ifdef __DEBUG__
-    std::cout << "C_y: "
-        << std::setw (dec_prec) << c_y
-        << std::setw (dec_prec) << c_y_rudd
-        << std::setw (dec_prec) << c_y_elev
-        << std::setw (dec_prec) << c_y_left
-        << std::setw (dec_prec) << c_y_right
-        << std::setw (dec_prec) << c_y_flaps
-        << std::endl;
-#endif
 
     F_engine = engine_force_on_throttle (throttle);
 
